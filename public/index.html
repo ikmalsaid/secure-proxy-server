@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Secure Proxy App</title>
+  <style>
+    body {
+        font-family: 'Segoe UI';
+        padding: 2rem;
+        max-width: 600px;
+        margin: auto; 
+    }
+    label { 
+        display: block;
+        margin-top: 1rem; 
+    }
+    input, textarea { 
+        width: 100%; 
+        padding: 0.5rem; 
+        margin-top: 0.2rem; 
+        max-height: 100px; 
+        resize: vertical;
+    }
+    button { 
+        margin-top: 1rem; 
+        padding: 0.5rem 1rem; 
+    }
+    pre { 
+        background: #f0f0f0;
+        padding: 1rem;
+        margin-top: 1rem;
+        white-space: pre-wrap; /* Prevents text overflow */
+        word-wrap: break-word;
+        max-height: 200px; /* Limits box height */
+        overflow-y: auto; /* Enables scrolling */
+    }
+  </style>
+</head>
+<body>
+  <h1>Secure Proxy Demo</h1>
+
+  <section>
+    <h2>1. Login</h2>
+    <label>Username: <input id="username" /></label>
+    <label>Password: <input id="password" type="password" /></label>
+    <button onclick="login()">Login</button>
+    <pre id="tokenBox">Token: (not logged in)</pre>
+  </section>
+
+  <section>
+    <h2>2. Send Proxy POST</h2>
+    <label>Title: <input id="title" /></label>
+    <label>Body: <textarea id="body"></textarea></label>
+    <label>User ID: <input id="userId" type="number" /></label>
+    <button onclick="sendPost()">Send to /proxy</button>
+    <pre id="resultBox">Result: (none)</pre>
+  </section>
+
+  <script>
+    let jwt = '';
+
+    async function login() {
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+
+      const res = await fetch('/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      });
+
+      const data = await res.json();
+      jwt = data.token || '';
+      document.getElementById('tokenBox').textContent = 'Token: ' + jwt;
+    }
+
+    async function sendPost() {
+      const title = document.getElementById('title').value;
+      const body = document.getElementById('body').value;
+      const userId = Number(document.getElementById('userId').value);
+
+      const res = await fetch('/proxy', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + jwt
+        },
+        body: JSON.stringify({ title, body, userId }),
+      });
+
+      const data = await res.json();
+      document.getElementById('resultBox').textContent = 'Result:\n' + JSON.stringify(data, null, 2);
+    }
+  </script>
+</body>
+</html>
